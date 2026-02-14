@@ -104,6 +104,39 @@ impl Blockchain {
        
     }
 
+    pub fn is_chain_valid(&self, difficulty: usize) -> bool {
+        if let Some(first_block) = self.chain.first() {
+            if first_block.previous_hash != "0".repeat(64) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        for (i, block) in self.chain.iter().enumerate().skip(1) {
+            let check_hash = block.calculate_hash();
+            if check_hash != block.hash {
+                return false;
+            }
+
+            let previous_block = &self.chain[i - 1];
+            if block.previous_hash != previous_block.hash {
+                return false;
+            }
+
+            if block.id != previous_block.id + 1 {
+                return false;
+            }
+
+            let zero_count = block.hash.chars().take_while(|&c| c == '0').count();
+            if zero_count < difficulty {
+                return false;
+            }
+        }
+
+        true
+    }
+
     pub fn get_chain(&self) -> &[Block] {
         &self.chain
     }
